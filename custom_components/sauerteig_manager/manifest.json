@@ -1,0 +1,11 @@
+{
+  "domain": "sauerteig_manager",
+  "name": "Sauerteig Manager",
+  "version": "1.0.0",
+  "config_flow": true,
+  "codeowners": ["@passport"],
+  "documentation": "https://github.com/passport/sauerteig_manager",
+  "dependencies": [],
+  "requirements": [],
+  "iot_class": "local_polling"
+}
