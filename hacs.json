@@ -1,0 +1,5 @@
+{
+  "name": "Sauerteig Manager",
+  "render_readme": true,
+  "homeassistant": "2026.x.x"
+}
