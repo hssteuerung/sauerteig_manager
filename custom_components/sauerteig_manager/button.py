@@ -2,55 +2,43 @@ import logging
 from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-import homeassistant.util.dt as dt_util
 
-from .const import DOMAIN, SIGNAL_SAUERTEIG_UPDATE
-
+DOMAIN = "sauerteig_manager"
 _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    sauerteig_name = entry.data.get("name", "Unbekannter Sauerteig")
-    button = SauerteigFuetternButton(hass, entry, sauerteig_name)
-    async_add_entities([button])
+    """Setzt den Füttern-Button auf."""
+    entry_id = entry.entry_id
+    name = entry.data.get("name", "Sauerteig")
 
-class SauerteigFuetternButton(ButtonEntity):
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry, name: str) -> None:
+    device_info = DeviceInfo(
+        identifiers={(DOMAIN, entry_id)},
+        name=name,
+        manufacturer="Sauerteig Meister",
+        model="Sourdough Starter Tracker",
+    )
+
+    async_add_entities([SauerteigFeedButton(hass, entry, device_info)])
+
+class SauerteigFeedButton(ButtonEntity):
+    """Button, um den Sauerteig zu füttern."""
+
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry, device_info: DeviceInfo) -> None:
         self._hass = hass
         self._entry = entry
-        self._name = name
-        self._attr_name = f"{name} Füttern"
-        self._attr_unique_id = f"{entry.entry_id}_fuettern_button"
-        self._attr_icon = "mdi:bread-slice-outline"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, entry.entry_id)},
-            name=self._name,
-            manufacturer="HSsteuerung",
-            model="Sauerteig Manager",
-            sw_version="1.0.0",
-        )
+        self._attr_name = f"{entry.data.get('name', 'Sauerteig')} Füttern"
+        self._attr_unique_id = f"{entry.entry_id}_feed_button"
+        self._attr_device_info = device_info
 
-    @property
-    def icon(self) -> str:
-        return "mdi:bread-slice-outline"
-        
     async def async_press(self) -> None:
-        jetzt = dt_util.utcnow() 
-        _LOGGER.info("Sauerteig '%s' wurde gefüttert!", self._name)
-        self._hass.bus.async_fire(
-            f"{DOMAIN}_gefuettert",
-            {
-                "entity_id": self.entity_id,
-                "sauerteig_name": self._name,
-                "zeitpunkt": jetzt.isoformat()
-            }
-        )
-        async_dispatcher_send(
-            self._hass, 
-            f"{SIGNAL_SAUERTEIG_UPDATE}_{self._entry.entry_id}", 
-            jetzt
+        """Wird aufgerufen, wenn der Button gedrückt wird."""
+        await self._hass.services.async_call(
+            DOMAIN,
+            "feed",
+            {"entry_id": self._entry.entry_id},
+            blocking=True
         )
