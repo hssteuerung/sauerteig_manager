@@ -1,0 +1,9 @@
+feed:
+  name: Sauerteig fuettern
+  description: Setzt den Fuetterungs-Zeitstempel zurueck.
+pause:
+  name: Timer pausieren
+  description: Pausiert den Fuetterungs-Timer.
+resume:
+  name: Timer fortsetzen
+  description: Setzt den Fuetterungs-Timer fort.
